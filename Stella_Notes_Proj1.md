@@ -30,3 +30,106 @@ In MAANG interviews, we call what you just described the "Fail-Fast Paradigm." I
 
 --> Protection against Cross-Site Scripting (XSS). If a hacker injects malicious JavaScript into your website, they can steal tokens from LocalStorage, but they cannot even see an HttpOnly cookie. It is completely invisible to JavaScript.]
 
+🚀 Phase 1: Secure Node.js & TypeScript Auth Backend
+🏗️ 1. Architecture & Folder Structure
+We used the Controller-Service-Route architecture. This separates concerns so the codebase remains scalable as the application grows to millions of users.
+
+Plaintext
+server/
+├── src/
+│   ├── config/          # Connects to external services (MongoDB)
+│   │   └── db.ts
+│   ├── controllers/     # The "Traffic Cops" (Handles HTTP req/res)
+│   │   └── auth.controller.ts
+│   ├── middleware/      # The "Bouncers" (Checks reqs before controllers)
+│   │   └── auth.middleware.ts
+│   ├── models/          # The "Database Blueprints" (Mongoose schemas)
+│   │   └── User.ts
+│   ├── routes/          # The "Map" (Maps URLs to Controllers)
+│   │   └── auth.routes.ts
+│   ├── services/        # The "Brain" (Heavy business logic & DB calls)
+│   │   └── auth.service.ts
+│   ├── utils/           # Helper functions
+│   │   └── generateToken.ts
+│   └── server.ts        # The Heartbeat (Initializes Express)
+├── .env                 # Secret keys (Ignored by Git!)
+├── .gitignore           # Tells Git what to hide
+├── package.json         # Project dependencies and run scripts
+└── tsconfig.json        # TypeScript strictness rules
+🔄 2. The Core Flows (How it all connects)
+A. The Registration Flow
+User sends email/password to POST /api/auth/register.
+
+Controller grabs the data and sends it to the Service.
+
+Service checks if the user exists. If not, it creates a new User.
+
+Mongoose Middleware (Pre-save): Before saving, bcrypt salts and hashes the password mathematically.
+
+User is saved securely. Controller returns a 201 Created response.
+
+B. The Login Flow (JWT & Cookies)
+User sends email/password to POST /api/auth/login.
+
+Service uses bcrypt.compare to check the hash.
+
+If valid, we generate a JSON Web Token (JWT) signed with our JWT_SECRET.
+
+We bake this token into an HttpOnly cookie.
+
+Why HttpOnly? It prevents Cross-Site Scripting (XSS) attacks. Malicious JavaScript cannot read this cookie; only the browser can send it.
+
+C. The Protected Route Flow (The Bouncer)
+User requests GET /api/auth/profile.
+
+Request hits the protectRoute Middleware first.
+
+Middleware reads the jwt cookie. If it's missing or forged, it throws a 401 Unauthorized.
+
+If valid, the middleware decodes the token, finds the user in the database, attaches them to req.user, and calls next().
+
+The Controller finally runs and welcomes the user.
+
+🛠️ 3. Technologies Mastered
+Node.js & Express: The core server runtime and framework.
+
+TypeScript: Added strict typing to catch bugs before the code ran.
+
+MongoDB & Mongoose: A NoSQL database and the ODM (Object Data Modeling) library to talk to it.
+
+Bcryptjs: For cryptographic password hashing.
+
+JSON Web Tokens (JWT): For stateless, mathematically verifiable user sessions.
+
+Cookie-Parser: To allow Express to read incoming browser cookies.
+
+⚠️ 4. Problems Faced & Lessons Learned
+A senior engineer is defined by the bugs they've fixed. Here is your battle-log:
+
+The Typos (expireIn vs expiresIn): * Problem: TypeScript threw an "overload" error on jwt.sign.
+
+Lesson: Strict typing caught a spelling mistake that would have created permanent, non-expiring tokens. TypeScript protects your app.
+
+ES Modules vs CommonJS (import * as jwt):
+
+Problem: The jsonwebtoken library lacked default exports, causing red lines.
+
+Lesson: Used the namespace import * as to bundle older JavaScript libraries safely into modern TypeScript.
+
+The 502 Bad Gateway (MongoDB Firewall):
+
+Problem: Render successfully hosted the app, but it couldn't connect to the database.
+
+Lesson: Cloud servers have different IPs than local laptops. We had to go into MongoDB Atlas Network Access and add 0.0.0.0/0 to allow the cloud server through the firewall.
+
+Render Port Clashes:
+
+Problem: Forcing PORT=10000 in Render's environment variables caused routing issues.
+
+Lesson: Cloud providers often dynamically assign their own internal ports. We deleted our hardcoded PORT variable and let process.env.PORT dynamically catch Render's assignment.
+
+The Missing CI/CD Update (Git 3-Step Dance):
+
+Problem: Pushed code to GitHub but Render didn't show the new changes.
+
+Lesson: git push only sends what has been committed! We learned the strict sequence: git add . (Stage), git commit -m "..." (Save snapshot), and then git push (Upload).
