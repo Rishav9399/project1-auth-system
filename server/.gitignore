@@ -1,0 +1,18 @@
+# 1. Dependecies (Massive, auto-generated files. The cloud will install its own!)
+node_modules/
+
+# 2. Secrets (If you commit this, hackers WILL steal your database)
+.env*
+
+# 3. Compiles Output (We only commit the beautiful Typescript src, not the ugly JS)
+dist/
+build/
+
+# 4. Logs (Trash files generated if npm crashes)
+logs
+*.log
+npm-debug.log
+
+# 5. OS Junk (Hidden files Mac/Windows creates automatically)
+.DS_Store
+Thumbs.db
