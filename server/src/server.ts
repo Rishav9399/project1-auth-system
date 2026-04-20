@@ -31,7 +31,7 @@ app.use('/api/auth', authRoutes);
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'success',
-    message: 'Stella says: The server is alive , Rishav',
+    message: 'Stella says: The server is alive , Rishav. Never underestimate a tiny projects because tiny ones when combine make things bigger and that will actually blow minds.',
   });
 });
 
