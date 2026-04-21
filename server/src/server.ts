@@ -18,8 +18,15 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 // Global Middlewarre
+
 app.use(helmet()); // Secures your HTTP header.
-app.use(cors()); // Allows your future frontend to talk to this API.
+// Allows your future frontend to talk to this API.
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production'
+    ? 'https://your-future-frontend-url.vercel.app' // We will update this when we deploy the frontend!
+    : 'http://localhost:5173', // Vite's default local port
+  credentials: true
+}));
 app.use(express.json()); // ALlows your server to read JSON bodies.
 app.use(express.json());
 app.use(cookieParser());  // <--- Stella's new rule: Read the cookies!
